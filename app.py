@@ -42,7 +42,7 @@ class AppMensageria:
                 print("Opção inválida!")
 
     def enviar(self):
-        destino = input("Enviar para o usuário (@exemplo): ").strip()
+        destino = input("Enviar para o usuário (comece com @): ").strip()
         
         if not destino.startswith("@"):
             print("O usuário de destino deve começar com '@'.")
