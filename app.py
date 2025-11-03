@@ -1,34 +1,51 @@
 import os
-from banco import BancoDeDados
-from model import Messagem
+import time
+
 from crypto import Cryptography
+from model import Messagem
+from repository import MensagemRepository
+
 
 class AppMensageria:
     def __init__(self):
-        self.banco = BancoDeDados()
+        self.banco = MensagemRepository()
         self.usuario = None
         self.crypto = Cryptography()
 
     def limpar_tela(self):
         os.system("cls" if os.name == "nt" else "clear")
 
+    def cabecalho(self, titulo):
+        """Exibe um cabeçalho formatado"""
+        print("\n" + "="*50)
+        print(f"  {titulo.upper()}")
+        print("="*50)
+
     def login(self):
         self.limpar_tela()
-        nome = input("Digite seu @usuario: ").strip()
+        self.cabecalho("LOGIN")
+        nome = input("\n👤 Digite seu @usuario: ").strip()
+        
         if not nome.startswith("@"):
-            print("O nome deve começar com '@'.")
+            print("\n❌ O nome deve começar com '@'.")
+            time.sleep(1.5)
             return self.login()
+        
         self.usuario = nome
+        print(f"\n✅ Login realizado com sucesso!")
+        print(f"   Bem-vindo, {self.usuario}")
+        time.sleep(2)
         self.limpar_tela()
-        print(f"\nLogin realizado com sucesso: {self.usuario}\n")
 
     def menu(self):
         while True:
-            print("\n1. Para enviar mensagem")
-            print("2. Para ver mensagens não lidas")
-            print("3. Para sair")
+            self.cabecalho(f"MENU - {self.usuario}")
+            print("\n  [1] 📤 Enviar mensagem")
+            print("  [2] 📬 Ver mensagens não lidas")
+            print("  [3] 🚪 Sair")
+            print("\n" + "-"*50)
 
-            opcao = input("\nEscolha a sua ação: ").strip()
+            opcao = input("\n➤ Escolha uma opção: ").strip()
             self.limpar_tela()
 
             if opcao == "1":
@@ -36,63 +53,113 @@ class AppMensageria:
             elif opcao == "2":
                 self.ver_mensagens()
             elif opcao == "3":
-                print("Saindo...")
+                print("\n👋 Até logo!\n")
                 break
             else:
-                print("Opção inválida!")
+                print("\n❌ Opção inválida!")
+                time.sleep(1)
 
     def enviar(self):
-        destino = input("Enviar para o usuário (comece com @): ").strip()
+        self.cabecalho("ENVIAR MENSAGEM")
+        
+        destino = input("\n📨 Para (comece com @): ").strip()
         
         if not destino.startswith("@"):
-            print("O usuário de destino deve começar com '@'.")
-            self.limpar_tela()
+            print("\n❌ O usuário deve começar com '@'.")
+            time.sleep(1.5)
             return
         
         if destino == self.usuario:
-            print("Você não pode enviar mensagem para si mesmo.")
-            self.limpar_tela()
+            print("\n❌ Você não pode enviar mensagem para si mesmo.")
+            time.sleep(1.5)
             return
         
-        texto = input("Digite a mensagem (mínimo 50 caracteres): ").strip()
-        if len(texto) < 50:
-            print("Mensagem muito curta.")
+        print(f"\n✏️  Escreva sua mensagem (máximo 50 caracteres)")
+        texto = input("➤ ").strip()
+        
+        if len(texto) > 50:
+            print(f"\n❌ Mensagem muito longa! ({len(texto)}/50 caracteres)")
+            time.sleep(1.5)
+            return
+        
+        if len(texto) == 0:
+            print("\n❌ Mensagem vazia!")
+            time.sleep(1.5)
             return
 
-        senha = input("Digite a chave criptográfica: ").strip()
-        self.limpar_tela()
+        senha = input("\n🔐 Chave criptográfica: ").strip()
+        
+        if not senha:
+            print("\n❌ Senha não pode ser vazia!")
+            time.sleep(1.5)
+            return
 
+        # Criptografa a mensagem
         mensagem_cifrada = self.crypto.criptografar(texto, senha)
-        self.banco.enviar_mensagem(self.usuario, destino, mensagem_cifrada)
-        print("Mensagem cifrada e enviada com sucesso!")
+        
+        # Cria objeto Messagem e salva
+        mensagem = Messagem(
+            sender=self.usuario,
+            receiver=destino,
+            content=mensagem_cifrada
+        )
+        
+        self.banco.salvar_mensagem(mensagem.to_dict())
+        
+        print("\n✅ Mensagem cifrada e enviada com sucesso!")
+        print(f"   De: {self.usuario} → Para: {destino}")
+        time.sleep(2)
 
     def ver_mensagens(self):
-        mensagens = self.banco.listar_nao_lidas(self.usuario)
-        self.limpar_tela()
+        mensagens = self.banco.buscar_nao_lidas(self.usuario)
+        
         if not mensagens:
-            print("Não existem novas mensagens.")
+            self.cabecalho("MENSAGENS")
+            print("\n📭 Não existem novas mensagens.\n")
+            time.sleep(1.5)
             return
         
-        print("\nMensagens não lidas:")
-        for i, msg in enumerate(mensagens):
-            print(f"{i+1}. De {msg['de']}")
+        self.cabecalho(f"MENSAGENS NÃO LIDAS ({len(mensagens)})")
+        
+        for i, msg_dict in enumerate(mensagens):
+            msg = Messagem.from_dict(msg_dict)
+            data = msg.timestamp.strftime("%d/%m/%Y %H:%M")
+            print(f"\n  [{i+1}] 📩 De: {msg.sender}")
+            print(f"      🕐 {data}")
+        
+        print("\n" + "-"*50)
 
         try:
-            escolha = int(input("\nEscolha o número da mensagem: ")) - 1
-            mensagem = mensagens[escolha]
+            escolha = int(input("\n➤ Escolha o número da mensagem: ")) - 1
+            if escolha < 0 or escolha >= len(mensagens):
+                raise IndexError
+            mensagem_dict = mensagens[escolha]
         except (ValueError, IndexError):
-            print("Escolha inválida.")
+            print("\n❌ Escolha inválida!")
+            time.sleep(1.5)
             return
 
-        senha = input("Digite a chave criptográfica para decifrar: ").strip()
+        senha = input("\n🔐 Chave para decifrar: ").strip()
         self.limpar_tela()
 
         try:
-            texto = self.crypto.descriptografar(mensagem["mensagem"], senha)
-            print(f"\nMensagem decifrada:\n{texto}")
-            self.banco.marcar_como_lida(mensagem["_id"])
+            mensagem = Messagem.from_dict(mensagem_dict)
+            texto = self.crypto.descriptografar(mensagem.content, senha)
+            
+            self.cabecalho("MENSAGEM DECIFRADA")
+            print(f"\n📨 De: {mensagem.sender}")
+            print(f"🕐 {mensagem.timestamp.strftime('%d/%m/%Y às %H:%M')}")
+            print("\n" + "-"*50)
+            print(f"\n{texto}")
+            print("\n" + "-"*50)
+            
+            self.banco.marcar_como_lida(mensagem_dict["_id"])
+            input("\n✅ Pressione ENTER para voltar...")
+            
         except ValueError:
-            print("Chave incorreta!")
+            print("\n❌ Chave incorreta! Não foi possível decifrar.")
+            time.sleep(2)
+
 
 if __name__ == "__main__":
     try:
@@ -100,4 +167,4 @@ if __name__ == "__main__":
         app.login()
         app.menu()
     except KeyboardInterrupt:
-        print("\nEncerrado pelo usuário.")
+        print("\n\n👋 Encerrado pelo usuário.\n")
