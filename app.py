@@ -74,11 +74,11 @@ class AppMensageria:
             time.sleep(1.5)
             return
         
-        print(f"\n✏️  Escreva sua mensagem (máximo 50 caracteres)")
+        print(f"\n✏️  Escreva sua mensagem (mínimo 50 caracteres)")
         texto = input("➤ ").strip()
         
-        if len(texto) > 50:
-            print(f"\n❌ Mensagem muito longa! ({len(texto)}/50 caracteres)")
+        if len(texto) < 50:
+            print(f"\n❌ Mensagem muito curta! ({len(texto)}/50 caracteres)")
             time.sleep(1.5)
             return
         
