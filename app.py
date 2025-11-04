@@ -24,15 +24,15 @@ class AppMensageria:
     def login(self):
         self.limpar_tela()
         self.cabecalho("LOGIN")
-        nome = input("\n👤 Digite seu @usuario: ").strip()
+        nome = input("\nDigite seu @usuario: ").strip()
         
         if not nome.startswith("@"):
-            print("\n❌ O nome deve começar com '@'.")
+            print("\nO nome deve começar com '@'.")
             time.sleep(1.5)
             return self.login()
         
         self.usuario = nome
-        print(f"\n✅ Login realizado com sucesso!")
+        print(f"\nLogin realizado com sucesso!")
         print(f"   Bem-vindo, {self.usuario}")
         time.sleep(2)
         self.limpar_tela()
@@ -40,9 +40,9 @@ class AppMensageria:
     def menu(self):
         while True:
             self.cabecalho(f"MENU - {self.usuario}")
-            print("\n  [1] 📤 Enviar mensagem")
-            print("  [2] 📬 Ver mensagens não lidas")
-            print("  [3] 🚪 Sair")
+            print("\n  [1] Enviar mensagem")
+            print("  [2] Ver mensagens não lidas")
+            print("  [3] Sair")
             print("\n" + "-"*50)
 
             opcao = input("\n➤ Escolha uma opção: ").strip()
@@ -53,44 +53,44 @@ class AppMensageria:
             elif opcao == "2":
                 self.ver_mensagens()
             elif opcao == "3":
-                print("\n👋 Até logo!\n")
+                print("\nAté logo!\n")
                 break
             else:
-                print("\n❌ Opção inválida!")
+                print("\nOpção inválida!")
                 time.sleep(1)
 
     def enviar(self):
         self.cabecalho("ENVIAR MENSAGEM")
         
-        destino = input("\n📨 Para (comece com @): ").strip()
+        destino = input("\nPara (comece com @): ").strip()
         
         if not destino.startswith("@"):
-            print("\n❌ O usuário deve começar com '@'.")
+            print("\nO usuário deve começar com '@'.")
             time.sleep(1.5)
             return
         
         if destino == self.usuario:
-            print("\n❌ Você não pode enviar mensagem para si mesmo.")
+            print("\nVocê não pode enviar mensagem para si mesmo.")
             time.sleep(1.5)
             return
         
-        print(f"\n✏️  Escreva sua mensagem (mínimo 50 caracteres)")
+        print(f"\nEscreva sua mensagem (mínimo 50 caracteres)")
         texto = input("➤ ").strip()
         
         if len(texto) < 50:
-            print(f"\n❌ Mensagem muito curta! ({len(texto)}/50 caracteres)")
+            print(f"\nMensagem muito curta! ({len(texto)}/50 caracteres)")
             time.sleep(1.5)
             return
         
         if len(texto) == 0:
-            print("\n❌ Mensagem vazia!")
+            print("\nMensagem vazia!")
             time.sleep(1.5)
             return
 
-        senha = input("\n🔐 Chave criptográfica: ").strip()
+        senha = input("\nChave criptográfica: ").strip()
         
         if not senha:
-            print("\n❌ Senha não pode ser vazia!")
+            print("\nSenha não pode ser vazia!")
             time.sleep(1.5)
             return
 
@@ -106,7 +106,7 @@ class AppMensageria:
         
         self.banco.salvar_mensagem(mensagem.to_dict())
         
-        print("\n✅ Mensagem cifrada e enviada com sucesso!")
+        print("\nMensagem cifrada e enviada com sucesso!")
         print(f"   De: {self.usuario} → Para: {destino}")
         time.sleep(2)
 
@@ -115,7 +115,7 @@ class AppMensageria:
         
         if not mensagens:
             self.cabecalho("MENSAGENS")
-            print("\n📭 Não existem novas mensagens.\n")
+            print("\nNão existem novas mensagens.\n")
             time.sleep(1.5)
             return
         
@@ -124,22 +124,22 @@ class AppMensageria:
         for i, msg_dict in enumerate(mensagens):
             msg = Messagem.from_dict(msg_dict)
             data = msg.timestamp.strftime("%d/%m/%Y %H:%M")
-            print(f"\n  [{i+1}] 📩 De: {msg.sender}")
-            print(f"      🕐 {data}")
+            print(f"\n  [{i+1}] De: {msg.sender}")
+            print(f"      {data}")
         
         print("\n" + "-"*50)
 
         try:
-            escolha = int(input("\n➤ Escolha o número da mensagem: ")) - 1
+            escolha = int(input("\nEscolha o número da mensagem: ")) - 1
             if escolha < 0 or escolha >= len(mensagens):
                 raise IndexError
             mensagem_dict = mensagens[escolha]
         except (ValueError, IndexError):
-            print("\n❌ Escolha inválida!")
+            print("\nEscolha inválida!")
             time.sleep(1.5)
             return
 
-        senha = input("\n🔐 Chave para decifrar: ").strip()
+        senha = input("\nChave para decifrar: ").strip()
         self.limpar_tela()
 
         try:
@@ -147,17 +147,17 @@ class AppMensageria:
             texto = self.crypto.descriptografar(mensagem.content, senha)
             
             self.cabecalho("MENSAGEM DECIFRADA")
-            print(f"\n📨 De: {mensagem.sender}")
-            print(f"🕐 {mensagem.timestamp.strftime('%d/%m/%Y às %H:%M')}")
+            print(f"\nDe: {mensagem.sender}")
+            print(f"{mensagem.timestamp.strftime('%d/%m/%Y às %H:%M')}")
             print("\n" + "-"*50)
             print(f"\n{texto}")
             print("\n" + "-"*50)
             
             self.banco.marcar_como_lida(mensagem_dict["_id"])
-            input("\n✅ Pressione ENTER para voltar...")
+            input("\nPressione ENTER para voltar...")
             
         except ValueError:
-            print("\n❌ Chave incorreta! Não foi possível decifrar.")
+            print("\nChave incorreta! Não foi possível decifrar.")
             time.sleep(2)
 
 
@@ -167,4 +167,4 @@ if __name__ == "__main__":
         app.login()
         app.menu()
     except KeyboardInterrupt:
-        print("\n\n👋 Encerrado pelo usuário.\n")
+        print("\n\nEncerrado pelo usuário.\n")

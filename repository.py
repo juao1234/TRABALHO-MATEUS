@@ -17,11 +17,11 @@ class MensagemRepository:
         
         # Valida se as variáveis foram configuradas
         if not uri:
-            raise ValueError("❌ MONGO_URI não configurada no arquivo .env")
+            raise ValueError("MONGO_URI não configurada no arquivo .env")
         if not db_name:
-            raise ValueError("❌ DB_NAME não configurada no arquivo .env")
+            raise ValueError("DB_NAME não configurada no arquivo .env")
         if not collection_name:
-            raise ValueError("❌ COLLECTION_MESSAGES não configurada no arquivo .env")
+            raise ValueError("COLLECTION_MESSAGES não configurada no arquivo .env")
         
         try:
             client = MongoClient(uri, serverSelectionTimeoutMS=5000)
@@ -31,7 +31,7 @@ class MensagemRepository:
             self.db = client[db_name]
             self.col = self.db[collection_name]
         except Exception as e:
-            raise ConnectionError(f"❌ Erro ao conectar ao MongoDB: {e}")
+            raise ConnectionError(f"Erro ao conectar ao MongoDB: {e}")
         
     def salvar_mensagem(self, msg_dict: dict):
         """Insere uma nova mensagem na coleção."""
